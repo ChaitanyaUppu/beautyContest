@@ -38,7 +38,15 @@
         }
         h3 {
             font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .rules {
+            font-size: 14px;
             margin-bottom: 20px;
+            text-align: left;
+        }
+        .rules p {
+            margin: 5px 0;
         }
         input[type="text"], input[type="number"] {
             width: 100%;
@@ -121,6 +129,15 @@
         <div id="landing">
             <h1>Beauty Contest</h1>
             <h3>Difficulty Level: King of Diamonds</h3>
+            <div class="rules">
+                <p><strong>How to Play:</strong></p>
+                <p>- Guess a number closest to 80% of everyone's average guess.</p>
+                <p>- Winner keeps score; others lose 1 point.</p>
+                <p>- 2 players: Guessing 0 costs 1 point.</p>
+                <p>- 3+ players: Same guesses cost 1 point; exact match penalizes others.</p>
+                <p>- Score ≤ -10 eliminates you.</p>
+                <p>- Last player with score > -10 wins!</p>
+            </div>
             <button id="landingStart">Start Game</button>
         </div>
         <div id="gameContainer" class="hidden">
