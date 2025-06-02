@@ -1,377 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beauty Contest</title>
-    <script src="/socket.io/socket.io.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #000000;
-            color: #FFFFFF;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            filter: grayscale(100%);
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Beauty Contest</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+     body {
+      font-family: Arial, sans-serif;
+      background-color: #000000;
+      color: #FFFFFF;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      filter: grayscale(100%);
+    }
 
-        .container {
-            background-color: #000000;
-            padding: 20px;
-            border: 2px solid #FFFFFF;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
+    .container {
+      background-color: #000000;
+      padding: 20px;
+      border: 2px solid #FFFFFF;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
 
-        h1 {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
+    h1, h2, h3 {
+      margin-bottom: 15px;
+    }
 
-        h2 {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 2px solid #FFFFFF;
+      border-radius: 8px;
+      background-color: #000000;
+      color: #FFFFFF;
+      box-sizing: border-box;
+      text-align: center;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
 
-        h3 {
-            font-size: 16px;
-            margin-bottom: 15px;
-        }
+    input[type="text"]:focus,
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #AAAAAA;
+    }
 
-        .rules {
-            font-size: 14px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 2px solid #FFFFFF;
+      border-radius: 8px;
+      background-color: #FFFFFF;
+      color: #000000;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+    }
 
-        .rules p {
-            margin: 5px 0;
-        }
+    button:hover {
+      background-color: #CCCCCC;
+    }
 
-        input[type="text"],
-        input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #FFFFFF;
-            border-radius: 4px;
-            background-color: #000000;
-            color: #FFFFFF;
-            box-sizing: border-box;
-        }
+    #playerList div {
+      padding: 8px;
+      background-color: #333333;
+      border: 1px solid #FFFFFF;
+      border-radius: 4px;
+      margin-bottom: 5px;
+      color: #FFFFFF;
+    }
 
-        input:focus {
-            outline: none;
-            border-color: #CCCCCC;
-        }
+    .hidden {
+      display: none;
+    }
 
-        button {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #FFFFFF;
-            border-radius: 4px;
-            background-color: #FFFFFF;
-            color: #000000;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #CCCCCC;
-        }
-
-        #joinRoom,
-        #submitNumber {
-            background-color: #FFFFFF;
-        }
-
-        #joinRoom:hover,
-        #submitNumber:hover {
-            background-color: #CCCCCC;
-        }
-
-        #createRoom {
-            background-color: #FFFFFF;
-        }
-
-        #createRoom:hover {
-            background-color: #CCCCCC;
-        }
-
-        #startGame {
-            background-color: #FFFFFF;
-        }
-
-        #startGame:hover {
-            background-color: #CCCCCC;
-        }
-
-        #leaveRoom {
-            background-color: #FFFFFF;
-        }
-
-        #leaveRoom:hover {
-            background-color: #CCCCCC;
-        }
-
-        #landingStart {
-            background-color: #FFFFFF;
-        }
-
-        #landingStart:hover {
-            background-color: #CCCCCC;
-        }
-
-        #playerList div {
-            padding: 8px;
-            background-color: #333333;
-            border: 1px solid #FFFFFF;
-            border-radius: 4px;
-            margin-bottom: 5px;
-            color: #FFFFFF;
-        }
-
-        #error,
-        #gameStatus,
-        #timer {
-            text-align: center;
-            margin-top: 10px;
-            color: #FFFFFF;
-        }
-
-        .hidden {
-            display: none;
-        }
-    </style>
+    #error,
+    #gameStatus,
+    #timer {
+      margin-top: 10px;
+      color: #FFFFFF;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="container">
-        <div id="landing">
-            <h1>Beauty Contest</h1>
-            <h3>Difficulty Level: King of Diamonds</h3>
-            <div class="rules">
-                <p><strong>How to Play:</strong></p>
-                <p>
-                    In the Beauty Contest (King of Diamonds), each player picks a number from 0 to 100. The target is
-                    80% of the average. Closest number wins; others lose 1 point. 4 players, Duplicate numbers are invalid. With 3
-                    players, an exact match makes losers lose 2 points. In 2-player mode, choosing 0 means instant loss -1 point.
-                    Players are eliminated at -10 points. Last one standing wins.Previous rules are applicable for next rounds.
-                </p>
-
-            </div>
-            <button id="landingStart">Start Game</button>
-        </div>
-        <div id="gameContainer" class="hidden">
-            <h1>Beauty Contest</h1>
-            <div id="menu">
-                <input id="playerName" type="text" placeholder="Enter your name">
-                <input id="roomCode" type="text" placeholder="Enter room code">
-                <button id="joinRoom">Join Room</button>
-                <button id="createRoom">Create Room</button>
-            </div>
-            <div id="room" class="hidden">
-                <h2 id="roomCodeDisplay"></h2>
-                <div id="playerList"></div>
-                <button id="startGame" class="hidden">Start Game</button>
-                <div id="game" class="hidden">
-                    <p id="timer"></p>
-                    <input id="numberInput" type="number" placeholder="Enter your number" min="0">
-                    <button id="submitNumber">Submit Number</button>
-                    <p id="gameStatus"></p>
-                </div>
-                <button id="leaveRoom">Leave Room</button>
-            </div>
-            <p id="error" class="hidden"></p>
-        </div>
+  <div class="container">
+    <div id="landing">
+      <h1>Beauty Contest</h1>
+      <h3>Difficulty Level: King of Diamonds</h3>
+      <p>
+        Each player picks a number from 0–100. The target is 80% of the average. Closest wins, others lose 1 point. Special rules for 2–4 players.
+        Eliminated at -10. Last one standing wins.
+      </p>
+      <button id="landingStart">Start Game</button>
     </div>
 
-    <script>
-        const socket = io();
-        const landingDiv = document.getElementById('landing');
-        const landingStartBtn = document.getElementById('landingStart');
-        const gameContainerDiv = document.getElementById('gameContainer');
-        const playerNameInput = document.getElementById('playerName');
-        const roomCodeInput = document.getElementById('roomCode');
-        const joinRoomBtn = document.getElementById('joinRoom');
-        const createRoomBtn = document.getElementById('createRoom');
-        const startGameBtn = document.getElementById('startGame');
-        const submitNumberBtn = document.getElementById('submitNumber');
-        const leaveRoomBtn = document.getElementById('leaveRoom');
-        const menuDiv = document.getElementById('menu');
-        const roomDiv = document.getElementById('room');
-        const gameDiv = document.getElementById('game');
-        const roomCodeDisplay = document.getElementById('roomCodeDisplay');
-        const playerList = document.getElementById('playerList');
-        const errorMsg = document.getElementById('error');
-        const timerDisplay = document.getElementById('timer');
-        const numberInput = document.getElementById('numberInput');
-        const gameStatus = document.getElementById('gameStatus');
+    <div id="gameContainer" class="hidden">
+      <h1>Beauty Contest</h1>
 
-        function showError(message) {
-            errorMsg.textContent = message;
-            errorMsg.classList.remove('hidden');
-            setTimeout(() => errorMsg.classList.add('hidden'), 3000);
+      <div id="menu">
+        <input id="playerName" type="text" placeholder="Enter your name" />
+        <input id="roomCode" type="text" placeholder="Enter room code" />
+        <button id="joinRoom">Join Room</button>
+        <button id="createRoom">Create Room</button>
+      </div>
+
+      <div id="room" class="hidden">
+        <h2 id="roomCodeDisplay"></h2>
+        <div id="playerList"></div>
+        <button id="startGame" class="hidden">Start Game</button>
+
+        <div id="game" class="hidden">
+          <p id="timer"></p>
+          <input id="numberInput" type="number" placeholder="Enter your number" min="0" />
+          <button id="submitNumber">Submit Number</button>
+          <p id="gameStatus"></p>
+        </div>
+
+        <button id="leaveRoom">Leave Room</button>
+      </div>
+      <p id="error" class="hidden"></p>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    let playerName = '';
+    const landingDiv = document.getElementById('landing');
+    const gameContainerDiv = document.getElementById('gameContainer');
+    const playerNameInput = document.getElementById('playerName');
+    const roomCodeInput = document.getElementById('roomCode');
+    const joinRoomBtn = document.getElementById('joinRoom');
+    const createRoomBtn = document.getElementById('createRoom');
+    const startGameBtn = document.getElementById('startGame');
+    const submitNumberBtn = document.getElementById('submitNumber');
+    const leaveRoomBtn = document.getElementById('leaveRoom');
+    const menuDiv = document.getElementById('menu');
+    const roomDiv = document.getElementById('room');
+    const gameDiv = document.getElementById('game');
+    const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+    const playerList = document.getElementById('playerList');
+    const errorMsg = document.getElementById('error');
+    const timerDisplay = document.getElementById('timer');
+    const numberInput = document.getElementById('numberInput');
+    const gameStatus = document.getElementById('gameStatus');
+
+    function showError(message) {
+      errorMsg.textContent = message;
+      errorMsg.classList.remove('hidden');
+      setTimeout(() => errorMsg.classList.add('hidden'), 3000);
+    }
+
+    function updatePlayerList(players) {
+      playerList.innerHTML = '';
+      players.forEach(({ name, score, eliminated }) => {
+        const div = document.createElement('div');
+        div.textContent = `${name}: ${score} points${eliminated ? ' (Eliminated)' : ''}`;
+        playerList.appendChild(div);
+      });
+    }
+
+    function startTimer(seconds) {
+      let timeLeft = seconds;
+      timerDisplay.textContent = `Time left: ${timeLeft}s`;
+      const interval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `Time left: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          timerDisplay.textContent = '';
         }
+      }, 1000);
+    }
 
-        function updatePlayerList(players) {
-            playerList.innerHTML = '';
-            players.forEach(({ name, score }) => {
-                const div = document.createElement('div');
-                div.textContent = `${name}: ${score} points`;
-                playerList.appendChild(div);
-            });
-        }
+    landingStart.addEventListener('click', () => {
+      landingDiv.classList.add('hidden');
+      gameContainerDiv.classList.remove('hidden');
+    });
 
-        function startTimer(seconds) {
-            let timeLeft = seconds;
-            timerDisplay.textContent = `Time left: ${timeLeft}s`;
-            const interval = setInterval(() => {
-                timeLeft--;
-                timerDisplay.textContent = `Time left: ${timeLeft}s`;
-                if (timeLeft <= 0) {
-                    clearInterval(interval);
-                    timerDisplay.textContent = '';
-                }
-            }, 1000);
-        }
+    joinRoomBtn.addEventListener('click', () => {
+      const name = playerNameInput.value.trim();
+      const code = roomCodeInput.value.trim().toUpperCase();
+      if (!name || !code) {
+        showError('Please enter both name and room code.');
+        return;
+      }
+      playerName = name;
+      socket.emit('joinRoom', { name, code });
+    });
 
-        landingStartBtn.addEventListener('click', () => {
-            landingDiv.classList.add('hidden');
-            gameContainerDiv.classList.remove('hidden');
-        });
+    createRoomBtn.addEventListener('click', () => {
+      const name = playerNameInput.value.trim();
+      if (!name) {
+        showError('Please enter your name.');
+        return;
+      }
+      playerName = name;
+      socket.emit('createRoom', name);
+    });
 
-        joinRoomBtn.addEventListener('click', () => {
-            const name = playerNameInput.value.trim();
-            const code = roomCodeInput.value.trim().toUpperCase();
-            if (!name || !code) {
-                showError('Please enter both name and room code.');
-                return;
-            }
-            socket.emit('joinRoom', { name, code });
-        });
+    startGameBtn.addEventListener('click', () => {
+      socket.emit('startGame');
+    });
 
-        createRoomBtn.addEventListener('click', () => {
-            const name = playerNameInput.value.trim();
-            if (!name) {
-                showError('Please enter your name.');
-                return;
-            }
-            socket.emit('createRoom', name);
-        });
+    submitNumberBtn.addEventListener('click', submitNumber);
+    numberInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter') submitNumber();
+    });
 
-        startGameBtn.addEventListener('click', () => {
-            socket.emit('startGame');
-        });
+    function submitNumber() {
+      const number = parseFloat(numberInput.value);
+      if (isNaN(number)) {
+        showError('Please enter a valid number.');
+        return;
+      }
+      socket.emit('submitNumber', number);
+      numberInput.value = '';
+      numberInput.disabled = true;
+      submitNumberBtn.disabled = true;
+    }
 
-        submitNumberBtn.addEventListener('click', submitNumber);
+    leaveRoomBtn.addEventListener('click', () => {
+      socket.emit('leaveRoom');
+      menuDiv.classList.remove('hidden');
+      roomDiv.classList.add('hidden');
+      gameDiv.classList.add('hidden');
+      startGameBtn.classList.add('hidden');
+      gameContainerDiv.classList.add('hidden');
+      landingDiv.classList.remove('hidden');
+    });
 
-        numberInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                submitNumber();
-            }
-        });
+    socket.on('roomCreated', ({ code, players, isCreator }) => {
+      menuDiv.classList.add('hidden');
+      roomDiv.classList.remove('hidden');
+      roomCodeDisplay.textContent = `Room Code: ${code}`;
+      updatePlayerList(players);
+      socket.isCreator = isCreator;
+      if (isCreator) startGameBtn.classList.remove('hidden');
+    });
 
-        function submitNumber() {
-            const number = parseFloat(numberInput.value);
-            if (isNaN(number)) {
-                showError('Please enter a valid number.');
-                return;
-            }
-            socket.emit('submitNumber', number);
-            numberInput.value = '';
-            numberInput.disabled = true;
-            submitNumberBtn.disabled = true;
-        }
+    socket.on('roomJoined', ({ code, players, isCreator }) => {
+      menuDiv.classList.add('hidden');
+      roomDiv.classList.remove('hidden');
+      roomCodeDisplay.textContent = `Room Code: ${code}`;
+      updatePlayerList(players);
+      socket.isCreator = isCreator;
+      if (isCreator) startGameBtn.classList.remove('hidden');
+    });
 
-        leaveRoomBtn.addEventListener('click', () => {
-            socket.emit('leaveRoom');
-            menuDiv.classList.remove('hidden');
-            roomDiv.classList.add('hidden');
-            gameDiv.classList.add('hidden');
-            startGameBtn.classList.add('hidden');
-            gameContainerDiv.classList.add('hidden');
-            landingDiv.classList.remove('hidden');
-        });
+    socket.on('updatePlayers', (players) => {
+      updatePlayerList(players);
+      const me = players.find(p => p.name === playerName);
+      const isEliminated = me?.eliminated;
 
-        socket.on('roomCreated', ({ code, players, isCreator }) => {
-            menuDiv.classList.add('hidden');
-            roomDiv.classList.remove('hidden');
-            roomCodeDisplay.textContent = `Room Code: ${code}`;
-            updatePlayerList(players);
-            socket.isCreator = isCreator;
-            if (isCreator && players.length >= 2) {
-                startGameBtn.classList.remove('hidden');
-            }
-        });
+      if (isEliminated && !socket.isCreator) {
+        numberInput.disabled = true;
+        submitNumberBtn.disabled = true;
+      } else {
+        numberInput.disabled = false;
+        submitNumberBtn.disabled = false;
+      }
 
-        socket.on('roomJoined', ({ code, players, isCreator }) => {
-            menuDiv.classList.add('hidden');
-            roomDiv.classList.remove('hidden');
-            roomCodeDisplay.textContent = `Room Code: ${code}`;
-            updatePlayerList(players);
-            socket.isCreator = isCreator;
-            if (isCreator && players.length >= 2) {
-                startGameBtn.classList.remove('hidden');
-            }
-        });
+      if (players.length >= 2 && socket.isCreator) {
+        startGameBtn.classList.remove('hidden');
+      } else {
+        startGameBtn.classList.add('hidden');
+      }
+    });
 
-        socket.on('updatePlayers', (players) => {
-            updatePlayerList(players);
-            if (players.length >= 2 && socket.isCreator) {
-                startGameBtn.classList.remove('hidden');
-            } else {
-                startGameBtn.classList.add('hidden');
-            }
-        });
+    socket.on('gameStarted', () => {
+      gameDiv.classList.remove('hidden');
+      numberInput.disabled = false;
+      submitNumberBtn.disabled = false;
+      gameStatus.textContent = 'Game started! Submit your number.';
+      startTimer(60);
+    });
 
-        socket.on('gameStarted', () => {
-            gameDiv.classList.remove('hidden');
-            numberInput.disabled = false;
-            submitNumberBtn.disabled = false;
-            gameStatus.textContent = 'Game started! Submit your number.';
-            startTimer(60);
-        });
+    socket.on('roundResult', ({ target, roundedTarget, winner, scores }) => {
+      gameStatus.textContent = winner
+        ? `Round ended! Target: ${target.toFixed(2)} (Rounded: ${roundedTarget}). Winner: ${winner}.`
+        : `Round ended! Target: ${target.toFixed(2)} (Rounded: ${roundedTarget}). No winner.`;
+      updatePlayerList(scores);
+      numberInput.disabled = true;
+      submitNumberBtn.disabled = true;
+      if (socket.isCreator) startGameBtn.classList.remove('hidden');
+    });
 
-        socket.on('roundResult', ({ target, roundedTarget, winner, scores }) => {
-            gameStatus.textContent = winner
-                ? `Round ended! Target: ${target.toFixed(2)} (Rounded: ${roundedTarget}). Winner: ${winner}.`
-                : `Round ended! Target: ${target.toFixed(2)} (Rounded: ${roundedTarget}). No winner.`;
-            updatePlayerList(scores);
-            numberInput.disabled = true;
-            submitNumberBtn.disabled = true;
-            if (socket.isCreator) {
-                startGameBtn.classList.remove('hidden');
-            }
-        });
+    socket.on('creatorChanged', ({ newCreator }) => {
+      socket.isCreator = (newCreator === playerName);
+      if (socket.isCreator) startGameBtn.classList.remove('hidden');
+    });
 
-        socket.on('gameEnded', ({ winner }) => {
-            gameDiv.classList.add('hidden');
-            gameStatus.textContent = `Game over! Winner: ${winner}`;
-            startGameBtn.classList.add('hidden');
-        });
+    socket.on('gameEnded', ({ winner }) => {
+      gameDiv.classList.add('hidden');
+      gameStatus.textContent = `Game over! Winner: ${winner}`;
+      startGameBtn.classList.add('hidden');
+    });
 
-        socket.on('error', (message) => {
-            showError(message);
-            if (message.includes('disconnected') || message.includes('new room')) {
-                menuDiv.classList.remove('hidden');
-                roomDiv.classList.add('hidden');
-                gameDiv.classList.add('hidden');
-                startGameBtn.classList.add('hidden');
-                gameContainerDiv.classList.add('hidden');
-                landingDiv.classList.remove('hidden');
-            }
-        });
-    </script>
+    socket.on('error', (message) => {
+      showError(message);
+      if (message.includes('disconnected') || message.includes('new room')) {
+        menuDiv.classList.remove('hidden');
+        roomDiv.classList.add('hidden');
+        gameDiv.classList.add('hidden');
+        startGameBtn.classList.add('hidden');
+        gameContainerDiv.classList.add('hidden');
+        landingDiv.classList.remove('hidden');
+      }
+    });
+  </script>
 </body>
-
 </html>
