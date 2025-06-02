@@ -99,88 +99,199 @@ io.on('connection', (socket) => {
         const playerCount = activePlayers.length;
         const numbers = Object.values(submissions).filter(n => !isNaN(n) && n !== null);
         const target = numbers.length > 0 ? (numbers.reduce((a, b) => a + b, 0) / numbers.length) * 0.8 : 0;
+        const roundedTarget = Math.round(target);
 
         let winner = null;
         let duplicates = [];
 
-        console.log(`Room ${roomCode}: Submissions:`, submissions, `Target: ${target}, Active players: ${playerCount}`);
+        console.log(`Room ${roomCode}: Submissions:`, submissions, `Target: ${target}, Rounded Target: ${roundedTarget}, Active players: ${playerCount}`);
 
-        // Check for duplicate numbers (3+ active players)
-        if (playerCount >= 3) {
-            const numberCounts = {};
-            Object.values(submissions).forEach(num => {
-                if (num !== undefined && num !== null) {
-                    numberCounts[num] = (numberCounts[num] || 0) + 1;
-                    if (numberCounts[num] > 1) duplicates.push(num);
-                }
-            });
-            console.log(`Room ${roomCode}: Duplicates:`, duplicates);
-        }
-
-        // Apply scoring rules
-        let exactMatch = false;
-        players.forEach(player => {
-            if (player.score <= -10) {
-                console.log(`Player ${player.name}: Already eliminated, score: ${player.score}`);
-                return;
-            }
-
-            const guess = submissions[player.name];
-            if (guess === undefined || guess === null) {
-                player.score -= 1;
-                console.log(`Player ${player.name}: No submission, score: ${player.score}`);
-                return;
-            }
-
-            // Rule for 3+ players: duplicates
-            if (playerCount >= 3 && duplicates.includes(guess)) {
-                player.score -= 1;
-                console.log(`Player ${player.name}: Duplicate guess ${guess}, score: ${player.score}`);
-                return;
-            }
-
-            // Rule for 2 players: choosing 0
-            if (playerCount === 2 && guess === 0) {
-                player.score -= 1;
-                console.log(`Player ${player.name}: Guess 0, score: ${player.score}`);
-                return;
-            }
-
-            // Rule for 3 players: exact match
-            if (playerCount === 3 && Math.abs(guess - target) < 0.0001) {
-                exactMatch = true;
-                winner = player.name;
-                players.forEach(p => {
-                    if (p.name !== player.name && p.score > -10) {
-                        p.score -= 1;
-                        console.log(`Player ${p.name}: Exact match by ${player.name}, score: ${p.score}`);
-                    }
-                });
-                console.log(`Player ${player.name}: Exact match, score: ${player.score}`);
-                return;
-            }
-
-            // General rule: closest to target
-            if (!isNaN(guess) && !duplicates.includes(guess)) {
-                if (!winner || Math.abs(guess - target) < Math.abs(submissions[winner] - target)) {
-                    winner = player.name;
-                }
+        // Identify duplicates
+        const numberCounts = {};
+        Object.values(submissions).forEach(num => {
+            if (num !== undefined && num !== null) {
+                numberCounts[num] = (numberCounts[num] || 0) + 1;
+                if (numberCounts[num] > 1) duplicates.push(num);
             }
         });
+        console.log(`Room ${roomCode}: Duplicates:`, duplicates);
 
-        // Apply penalties for non-winners (except for 3-player exact match case)
-        if (winner && !exactMatch) {
+        // Scoring rules based on player count
+        if (playerCount === 2) {
+            let exactMatch = false;
+            let zeroGuess = false;
+            let zeroPlayer = null;
+            let nonZeroPlayer = null;
+
+            // Check for zero guess
             players.forEach(player => {
-                if (player.name !== winner && !duplicates.includes(submissions[player.name]) && submissions[player.name] !== undefined && submissions[player.name] !== null && player.score > -10) {
-                    player.score -= 1;
-                    console.log(`Player ${player.name}: Not winner, score: ${player.score}`);
+                const guess = submissions[player.name];
+                if (guess === 0) {
+                    zeroGuess = true;
+                    zeroPlayer = player.name;
+                } else if (guess !== undefined && guess !== null) {
+                    nonZeroPlayer = player.name;
                 }
             });
+
+            players.forEach(player => {
+                if (player.score <= -10) {
+                    console.log(`Player ${player.name}: Already eliminated, score: ${player.score}`);
+                    return;
+                }
+
+                const guess = submissions[player.name];
+                if (guess === undefined || guess === null) {
+                    player.score -= 1;
+                    console.log(`Player ${player.name}: No submission, score: ${player.score}`);
+                    return;
+                }
+
+                // Duplicate rule
+                if (duplicates.includes(guess)) {
+                    player.score -= 1;
+                    console.log(`Player ${player.name}: Duplicate guess ${guess}, score: ${player.score}`);
+                    return;
+                }
+
+                // Zero guess rule
+                if (zeroGuess && guess === 0) {
+                    player.score -= 1;
+                    console.log(`Player ${player.name}: Guess 0, score: ${player.score}`);
+                    if (nonZeroPlayer && !duplicates.includes(submissions[nonZeroPlayer])) {
+                        winner = nonZeroPlayer;
+                        console.log(`Player ${nonZeroPlayer}: Wins (opponent guessed 0)`);
+                    }
+                    return;
+                }
+
+                // Exact match rule (rounded target)
+                if (guess === roundedTarget) {
+                    exactMatch = true;
+                    winner = player.name;
+                    players.forEach(p => {
+                        if (p.name !== player.name && p.score > -10) {
+                            p.score -= 2;
+                            console.log(`Player ${p.name}: Exact match by ${player.name}, score: ${p.score}`);
+                        }
+                    });
+                    console.log(`Player ${player.name}: Exact match (rounded target), score: ${player.score}`);
+                    return;
+                }
+
+                // Closest to target (if not already set by zero guess)
+                if (!isNaN(guess) && !winner) {
+                    if (!winner || Math.abs(guess - target) < Math.abs(submissions[winner] - target)) {
+                        winner = player.name;
+                    }
+                }
+            });
+
+            // Apply penalties for non-winners if no exact match or zero guess winner
+            if (winner && !exactMatch && !zeroGuess) {
+                players.forEach(player => {
+                    if (player.name !== winner && !duplicates.includes(submissions[player.name]) && submissions[player.name] !== undefined && submissions[player.name] !== null && player.score > -10) {
+                        player.score -= 1;
+                        console.log(`Player ${player.name}: Not winner, score: ${player.score}`);
+                    }
+                });
+            }
+        } else if (playerCount === 3) {
+            let exactMatch = false;
+            players.forEach(player => {
+                if (player.score <= -10) {
+                    console.log(`Player ${player.name}: Already eliminated, score: ${player.score}`);
+                    return;
+                }
+
+                const guess = submissions[player.name];
+                if (guess === undefined || guess === null) {
+                    player.score -= 1;
+                    console.log(`Player ${player.name}: No submission, score: ${player.score}`);
+                    return;
+                }
+
+                // Duplicate rule
+                if (duplicates.includes(guess)) {
+                    player.score -= 1;
+                    console.log(`Player ${player.name}: Duplicate guess ${guess}, score: ${player.score}`);
+                    return;
+                }
+
+                // Exact match rule (rounded target)
+                if (guess === roundedTarget) {
+                    exactMatch = true;
+                    winner = player.name;
+                    players.forEach(p => {
+                        if (p.name !== player.name && p.score > -10) {
+                            p.score -= 2;
+                            console.log(`Player ${p.name}: Exact match by ${player.name}, score: ${p.score}`);
+                        }
+                    });
+                    console.log(`Player ${player.name}: Exact match (rounded target), score: ${player.score}`);
+                    return;
+                }
+
+                // Closest to target
+                if (!isNaN(guess)) {
+                    if (!winner || Math.abs(guess - target) < Math.abs(submissions[winner] - target)) {
+                        winner = player.name;
+                    }
+                }
+            });
+
+            // Apply penalties for non-winners if no exact match
+            if (winner && !exactMatch) {
+                players.forEach(player => {
+                    if (player.name !== winner && !duplicates.includes(submissions[player.name]) && submissions[player.name] !== undefined && submissions[player.name] !== null && player.score > -10) {
+                        player.score -= 1;
+                        console.log(`Player ${player.name}: Not winner, score: ${player.score}`);
+                    }
+                });
+            }
+        } else if (playerCount >= 4) {
+            players.forEach(player => {
+                if (player.score <= -10) {
+                    console.log(`Player ${player.name}: Already eliminated, score: ${player.score}`);
+                    return;
+                }
+
+                const guess = submissions[player.name];
+                if (guess === undefined || guess === null) {
+                    player.score -= 1;
+                    console.log(`Player ${player.name}: No submission, score: ${player.score}`);
+                    return;
+                }
+
+                // Duplicate rule
+                if (duplicates.includes(guess)) {
+                    player.score -= 1;
+                    console.log(`Player ${player.name}: Duplicate guess ${guess}, score: ${player.score}`);
+                    return;
+                }
+
+                // Closest to target
+                if (!isNaN(guess)) {
+                    if (!winner || Math.abs(guess - target) < Math.abs(submissions[winner] - target)) {
+                        winner = player.name;
+                    }
+                }
+            });
+
+            // Apply penalties for non-winners
+            if (winner) {
+                players.forEach(player => {
+                    if (player.name !== winner && !duplicates.includes(submissions[player.name]) && submissions[player.name] !== undefined && submissions[player.name] !== null && player.score > -10) {
+                        player.score -= 1;
+                        console.log(`Player ${player.name}: Not winner, score: ${player.score}`);
+                    }
+                });
+            }
         }
 
         // Broadcast scores before disconnecting eliminated players
-        io.to(roomCode).emit('roundResult', { target, winner, scores: players });
-        console.log(`Room ${roomCode}: Round result - Target: ${target}, Winner: ${winner}, Scores:`, players.map(p => ({ name: p.name, score: p.score })));
+        io.to(roomCode).emit('roundResult', { target, roundedTarget, winner, scores: players });
+        console.log(`Room ${roomCode}: Round result - Target: ${target}, Rounded Target: ${roundedTarget}, Winner: ${winner}, Scores:`, players.map(p => ({ name: p.name, score: p.score })));
 
         // Disconnect players with score <= -10
         const sockets = io.sockets.adapter.rooms.get(roomCode) || new Set();
@@ -205,7 +316,6 @@ io.on('connection', (socket) => {
         if (activePlayersAfterRound.length <= 1) {
             const gameWinner = activePlayersAfterRound.length === 1 ? activePlayersAfterRound[0].name : 'No one';
             io.to(roomCode).emit('gameEnded', { winner: gameWinner });
-            // Disconnect all remaining players
             sockets.forEach(socketId => {
                 const socket = io.sockets.sockets.get(socketId);
                 if (socket) {
@@ -285,6 +395,7 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(3000, () => {
-    console.log('Server running on port 3000');
+const port = process.env.PORT || 3000;
+server.listen(port, '0.0.0.0', () => {
+    console.log(`Server running on port ${port}`);
 });

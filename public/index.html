@@ -132,11 +132,11 @@
             <div class="rules">
                 <p><strong>How to Play:</strong></p>
                 <p>- Guess a number closest to 80% of everyone's average guess.</p>
-                <p>- Winner keeps score; others lose 1 point.</p>
-                <p>- 2 players: Guessing 0 costs 1 point.</p>
-                <p>- 3+ players: Same guesses cost 1 point; exact match penalizes others.</p>
-                <p>- Score ≤ -10 eliminates you.</p>
-                <p>- Last player with score > -10 wins!</p>
+                <p>- All players: Same guesses = lose 1 point; no guess = lose 1 point.</p>
+                <p>- 2 players: One guesses 0 = lose 1 point, non-zero player wins; guess rounded target = winner, other loses 2 points; closest wins, other loses 1 point.</p>
+                <p>- 3 players: Guess rounded target = winner, others lose 2 points; closest wins, others lose 1 point.</p>
+                <p>- 4 or more players: Closest to target wins, others lose 1 point.</p>
+                <p>- Score ≤ -10 = elimination. Minimum 2 players to start. Last player wins!</p>
             </div>
             <button id="landingStart">Start Game</button>
         </div>
@@ -311,10 +311,10 @@
             startTimer(60);
         });
 
-        socket.on('roundResult', ({ target, winner, scores }) => {
+        socket.on('roundResult', ({ target, roundedTarget, winner, scores }) => {
             gameStatus.textContent = winner
-                ? `Round ended! Target: ${target.toFixed(2)}. Winner: ${winner}.`
-                : `Round ended! Target: ${target.toFixed(2)}. No winner.`;
+                ? `Round ended! Target: ${target.toFixed(2)} (Rounded: ${roundedTarget}). Winner: ${winner}.`
+                : `Round ended! Target: ${target.toFixed(2)} (Rounded: ${roundedTarget}). No winner.`;
             updatePlayerList(scores);
             numberInput.disabled = true;
             submitNumberBtn.disabled = true;
