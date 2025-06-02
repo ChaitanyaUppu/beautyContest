@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,6 +18,7 @@
             margin: 0;
             filter: grayscale(100%);
         }
+
         .container {
             background-color: #000000;
             padding: 20px;
@@ -26,29 +28,36 @@
             max-width: 400px;
             text-align: center;
         }
+
         h1 {
             font-size: 28px;
             font-weight: bold;
             margin-bottom: 20px;
         }
+
         h2 {
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 15px;
         }
+
         h3 {
             font-size: 16px;
             margin-bottom: 15px;
         }
+
         .rules {
             font-size: 14px;
             margin-bottom: 20px;
             text-align: left;
         }
+
         .rules p {
             margin: 5px 0;
         }
-        input[type="text"], input[type="number"] {
+
+        input[type="text"],
+        input[type="number"] {
             width: 100%;
             padding: 10px;
             margin-bottom: 10px;
@@ -58,10 +67,12 @@
             color: #FFFFFF;
             box-sizing: border-box;
         }
+
         input:focus {
             outline: none;
             border-color: #CCCCCC;
         }
+
         button {
             width: 100%;
             padding: 10px;
@@ -73,39 +84,53 @@
             font-size: 16px;
             cursor: pointer;
         }
+
         button:hover {
             background-color: #CCCCCC;
         }
-        #joinRoom, #submitNumber {
+
+        #joinRoom,
+        #submitNumber {
             background-color: #FFFFFF;
         }
-        #joinRoom:hover, #submitNumber:hover {
+
+        #joinRoom:hover,
+        #submitNumber:hover {
             background-color: #CCCCCC;
         }
+
         #createRoom {
             background-color: #FFFFFF;
         }
+
         #createRoom:hover {
             background-color: #CCCCCC;
         }
+
         #startGame {
             background-color: #FFFFFF;
         }
+
         #startGame:hover {
             background-color: #CCCCCC;
         }
+
         #leaveRoom {
             background-color: #FFFFFF;
         }
+
         #leaveRoom:hover {
             background-color: #CCCCCC;
         }
+
         #landingStart {
             background-color: #FFFFFF;
         }
+
         #landingStart:hover {
             background-color: #CCCCCC;
         }
+
         #playerList div {
             padding: 8px;
             background-color: #333333;
@@ -114,16 +139,21 @@
             margin-bottom: 5px;
             color: #FFFFFF;
         }
-        #error, #gameStatus, #timer {
+
+        #error,
+        #gameStatus,
+        #timer {
             text-align: center;
             margin-top: 10px;
             color: #FFFFFF;
         }
+
         .hidden {
             display: none;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div id="landing">
@@ -131,12 +161,13 @@
             <h3>Difficulty Level: King of Diamonds</h3>
             <div class="rules">
                 <p><strong>How to Play:</strong></p>
-                <p>- Guess a number closest to 80% of everyone's average guess.</p>
-                <p>- All players: Same guesses = lose 1 point; no guess = lose 1 point.</p>
-                <p>- 2 players: One guesses 0 = lose 1 point, non-zero player wins; guess rounded target = winner, other loses 2 points; closest wins, other loses 1 point.</p>
-                <p>- 3 players: Guess rounded target = winner, others lose 2 points; closest wins, others lose 1 point.</p>
-                <p>- 4 or more players: Closest to target wins, others lose 1 point.</p>
-                <p>- Score ≤ -10 = elimination. Minimum 2 players to start. Last player wins!</p>
+                <p>
+                    In the Beauty Contest (King of Diamonds), each player picks a number from 0 to 100. The target is
+                    80% of the average. Closest number wins; others lose 1 point. 4 players, Duplicate numbers are invalid. With 3
+                    players, an exact match makes losers lose 2 points. In 2-player mode, choosing 0 means instant loss -1 point.
+                    Players are eliminated at -10 points. Last one standing wins.Previous rules are applicable for next rounds.
+                </p>
+
             </div>
             <button id="landingStart">Start Game</button>
         </div>
@@ -342,4 +373,5 @@
         });
     </script>
 </body>
+
 </html>
