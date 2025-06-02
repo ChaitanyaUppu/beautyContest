@@ -160,7 +160,7 @@ io.on('connection', (socket) => {
                     console.log(`Player ${player.name}: Guess 0, score: ${player.score}`);
                     if (nonZeroPlayer && !duplicates.includes(submissions[nonZeroPlayer])) {
                         winner = nonZeroPlayer;
-                        console.log(`Player ${nonZeroPlayer}: Wins (opponent guessed 0)`);
+                        console.log(`Player ${nonZeroPlayer}: Wins round (opponent guessed 0)`);
                     }
                     return;
                 }
@@ -179,7 +179,7 @@ io.on('connection', (socket) => {
                     return;
                 }
 
-                // Closest to target (if not already set by zero guess)
+                // Closest to target (if not already set by zero guess or exact match)
                 if (!isNaN(guess) && !winner) {
                     if (!winner || Math.abs(guess - target) < Math.abs(submissions[winner] - target)) {
                         winner = player.name;
